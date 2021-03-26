@@ -4,7 +4,7 @@ A C++ project in which you can play chess against an AI program which operates i
 ## Run on terminal
 
 ```sh
-g++ Header\*.cpp main.cpp -std=c++11 -o test
+g++ Header/*.cpp main.cpp -std=c++11 -o test
 test
 ```
 
