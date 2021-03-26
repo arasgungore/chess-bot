@@ -10,14 +10,14 @@ int main() {
 	if(AGAINST_BOT) {
 		do {
 			c.PrintBoard();
-			if(TWO_BOTS) {
+			if(TWO_BOTS) {				// bot vs bot (no human)
 				MoveCursorToXY(RIGHT, DOWN + 3*BOARD_SIZE + 5);
 				std::cout << CLEAR_LINE << std::endl << std::endl << CLEAR_LINE;
 				while(c.BotsTurn());
 			}
 			else {
 				if(BOT_IS_WHITE)
-					while(true) {
+					while(true) {		// team black player vs team white bot
 						MoveCursorToXY(RIGHT, DOWN + 3*BOARD_SIZE + 5);
 						std::cout << CLEAR_LINE << std::endl << std::endl << CLEAR_LINE;
 						if(!c.BotsTurn())
@@ -28,7 +28,7 @@ int main() {
 							break;
 					}
 				else
-					while(true) {
+					while(true) {		// team white player vs team black bot
 						if(!c.PlayersTurn())
 							break;
 						MoveCursorToXY(RIGHT, DOWN + 3*BOARD_SIZE + 5);
@@ -42,7 +42,7 @@ int main() {
 		} while(c.GameOver());
 		exit(0);
 	}
-	do {
+	do {								// player vs player (no bots)
 		c.PrintBoard();
 		while(c.PlayersTurn());
 	} while(c.GameOver());

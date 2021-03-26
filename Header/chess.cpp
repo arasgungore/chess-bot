@@ -4,44 +4,57 @@
 #include <conio.h>
 #include <windows.h>
 
+// function definitions
+
+// moves the cursor to a different (x, y) location on the terminal
 void MoveCursorToXY(const short &x, const short &y) noexcept {
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), (COORD){x,y});
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), (COORD){x, y});
 }
 
+// returns the given string in lowercase
 std::string ToLowerString(std::string s) noexcept {
 	transform(s.begin(), s.end(), s.begin(), [](const unsigned char &c){ return tolower(c); });
 	return s;
 }
 
+// returns a random number between "min" and "max"
 template<class T> T GetRandomNumber(const T &min, const T &max) noexcept {
 	return min + T(static_cast<double>(rand()) / static_cast<double>(RAND_MAX+1.0) * (max-min+1));
 }
 
 
 
+// chess class implementation
+
+// constructor of chess class
 Chess::Chess(const std::string &player1, const unsigned short &difficulty1, const std::string &player2, const unsigned short &difficulty2) noexcept
 : white(player1, difficulty1), black(player2, difficulty2) {
 	CopyBoard(STARTING_BOARD, board);
 }
 
+// checks whether the given coordinate is within board boundaries or not
 bool Chess::WithinBounds(const short &coord) noexcept {
 	return coord>=0 && coord<BOARD_SIZE;
 }
 
+// changes the given board coordinates from ASCII to numerical, e.g. ('d', '3') -> (3, 5)
 void Chess::ChangeToRealCoordinates(char &x1, char &y1, char &x2, char &y2) noexcept {
 	x1 -= 'a', x2 -= 'a';
 	y1 = '8'-y1, y2 = '8'-y2;
 }
 
+// changes the given board coordinates from numerical to ASCII, e.g. (3, 5) -> ('d', '3')
 void Chess::ChangeToString(char &x1, char &y1, char &x2, char &y2) noexcept {
 	x1 += 'a', x2 += 'a';
 	y1 = '8'-y1, y2 = '8'-y2;
 }
 
+// returns the given numerical board coordinates as a string
 std::string Chess::ToString(const short &x1, const short &y1, const short &x2, const short &y2) noexcept {
 	return {static_cast<char>(x1+'a'), static_cast<char>('8'-y1), static_cast<char>(x2+'a'), static_cast<char>('8'-y2)};
 }
 
+// returns the name that is displayed on the terminal for the given piece
 std::string Chess::PieceNameToString(const char &piece) noexcept {
 	switch(piece) {
 		case W_PAWN:	return "W_PAWN";
@@ -60,40 +73,45 @@ std::string Chess::PieceNameToString(const char &piece) noexcept {
 	}
 }
 
+// returns the worth of the given piece in points
 float Chess::EvaluatePiece(const char &piece) noexcept {
 	switch(piece) {
 		case W_PAWN:
-		case B_PAWN:	return 10;
+		case B_PAWN:	return 10;		// pawn: 10 points
 		case W_ROOK:
-		case B_ROOK:	return 50;
+		case B_ROOK:	return 50;		// rook: 50 points
 		case W_KNIGHT:
 		case B_KNIGHT:
 		case W_BISHOP:
-		case B_BISHOP:	return 30;
+		case B_BISHOP:	return 30;		// knight and bishop: 30 points
 		case W_QUEEN:
-		case B_QUEEN:	return 90;
+		case B_QUEEN:	return 90;		// queen: 90 points
 		case W_KING:
-		case B_KING:	return 900;
+		case B_KING:	return 900;		// king: 900 points, but you can assume it is infinite
 		default:		return 0;
 	}
 }
 
+// clears all available moves from the terminal
 void Chess::ClearAllMoves(const unsigned short &n) noexcept {
 	MoveCursorToXY(0, DOWN + 3*BOARD_SIZE + 9);
 	for(unsigned short i=0;i<n;++i)
 		std::cout << CLEAR_LINE << std::endl;
 }
 
+// prints the vertical seperators for the game board on the terminal
 void Chess::PrintSeparator(const char &ch) noexcept {
 	for(unsigned short i=1;i<BOARD_SIZE;++i)
 		std::cout << std::string(BOX_WIDTH, ch) << "|";
 	std::cout << std::string(BOX_WIDTH, ch) << std::endl << TO_RIGHT;
 }
 
+// copies the board contents of "from" to "to"
 void Chess::CopyBoard(const char from[BOARD_SIZE][BOARD_SIZE], char to[BOARD_SIZE][BOARD_SIZE]) noexcept {
 	std::copy(*from, *from + BOARD_SIZE*BOARD_SIZE, *to);
 }
 
+// checks whether the board positions of the given two boards are equal or not
 bool Chess::AreBoardsEqual(const char board1[BOARD_SIZE][BOARD_SIZE], const char board2[BOARD_SIZE][BOARD_SIZE]) noexcept {
 	return std::equal(*board1, *board1 + BOARD_SIZE*BOARD_SIZE, *board2);
 }
@@ -102,22 +120,39 @@ bool Chess::CanMovePiece(const short &x1, const short &y1, const short &x2, cons
 	return std::find(all_moves.cbegin(), all_moves.cend(), ToString(x1, y1, x2, y2)) != all_moves.cend();
 }
 
+// getter method, returns the piece located in the given x and y coordinates
 char Chess::GetPiece(const short &x, const short &y) const noexcept {
 //	CheckCoordinates(x, y, "GetPiece");
 	return board[y][x];
 }
 
-bool Chess::GetTurn() const noexcept {				return whites_turn;					}
+// getter method, returns whether it's team white's turn or not
+bool Chess::GetTurn() const noexcept {
+	return whites_turn;
+}
 
-Bot& Chess::GetCurrentPlayer() noexcept {			return whites_turn ? white : black;	}
+// returns a reference to the player object
+Bot& Chess::GetCurrentPlayer() noexcept {
+	return whites_turn ? white : black;
+}
 
-Bot Chess::GetCurrentPlayerConst() const noexcept {	return whites_turn ? white : black;	}
+// returns a copy of the player object
+Bot Chess::GetCurrentPlayerConst() const noexcept {
+	return whites_turn ? white : black;
+}
 
-Bot& Chess::GetOtherPlayer() noexcept {				return whites_turn ? black : white;	}
+Bot& Chess::GetOtherPlayer() noexcept {
+	return whites_turn ? black : white;
+}
 
-Bot Chess::GetOtherPlayerConst() const noexcept {	return whites_turn ? black : white;	}
+Bot Chess::GetOtherPlayerConst() const noexcept {
+	return whites_turn ? black : white;
+}
 
-void Chess::ChangeTurn() noexcept {					whites_turn = !whites_turn;			}
+// changes whose turn it is so the other player can make its move
+void Chess::ChangeTurn() noexcept {
+	whites_turn = !whites_turn;
+}
 
 // appends the last made game move to "all_game_moves" list
 void Chess::AppendToAllGameMoves(const short &x1, const short &y1, const short &x2, const short &y2) noexcept {
@@ -138,6 +173,7 @@ void Chess::Reset() noexcept {
 	system("cls");
 }
 
+// a function for exception handling, checks whether the given coordinates is within board boundaries or not
 void Chess::CheckCoordinates(const short &x, const short &y, const std::string &func_name) const noexcept(false) {
 	try {
 		if(!WithinBounds(x))		throw x;
@@ -206,7 +242,7 @@ bool Chess::ThreefoldRepetition() const noexcept {
 		for(unsigned short i=0;i<2;++i)	{
 			switch(it->first) {
 				case CASTLING:
-					return false;		//if a pawn has moved or a castling/capture has occured, then that board position is unique and repetition is not possible
+					return false;		// if a pawn has moved or a castling/capture has occured, then that board position is unique and repetition is not possible
 				default:
 					if(last_move[4] == W_PAWN || last_move[4] == B_PAWN || last_move[5] != EMPTY)
 						return false;
@@ -219,7 +255,7 @@ bool Chess::ThreefoldRepetition() const noexcept {
 				return false;
 			last_move = it->second;
 		}
-		if(AreBoardsEqual(prev_board, board))		//check for castling and en passant in every 2 turns
+		if(AreBoardsEqual(prev_board, board))		// check for castling and en passant in every 2 turns
 			if(GetOtherPlayerConst().GetCastling() == (it->first == CASTLING ? false : last_move[6 + (it->first == PROMOTION)]))
 				if((all_game_moves.size() > 1 ? GetEnPassant(board, prev(all_game_moves.cend(), 2)) : -1)
 				== (next(it) == all_game_moves.crend() ? -1 : GetEnPassant(prev_board, next(it))))
@@ -236,7 +272,7 @@ bool Chess::IsCheck(const bool &turn) const noexcept {
 				x = i, y = j;
 				break;
 			}
-	for(short i=x+1;i<BOARD_SIZE;++i)						//check queen and rook
+	for(short i=x+1;i<BOARD_SIZE;++i)						// check queen and rook
 		if(board[y][i] == W_ROOK - 7*turn)			return true;
 		else if(board[y][i] == W_QUEEN - 7*turn)	return true;
 		else if(board[y][i] != EMPTY)	break;
@@ -252,7 +288,7 @@ bool Chess::IsCheck(const bool &turn) const noexcept {
 		if(board[i][x] == W_ROOK - 7*turn)			return true;
 		else if(board[i][x] == W_QUEEN - 7*turn)	return true;
 		else if(board[i][x] != EMPTY)	break;
-	for(short i=x-1, j=y-1; i>=0 && j>=0; --i, --j)			//check queen and bishop
+	for(short i=x-1, j=y-1; i>=0 && j>=0; --i, --j)			// check queen and bishop
 		if(board[j][i] == W_BISHOP - 7*turn)		return true;
 		else if(board[j][i] == W_QUEEN - 7*turn)	return true;
 		else if(board[j][i] != EMPTY)	break;
@@ -268,10 +304,10 @@ bool Chess::IsCheck(const bool &turn) const noexcept {
 		if(board[j][i] == W_BISHOP - 7*turn)		return true;
 		else if(board[j][i] == W_QUEEN - 7*turn)	return true;
 		else if(board[j][i] != EMPTY)	break;
-	for(short i=x-1;i<x+2;++i)								//check king
+	for(short i=x-1;i<x+2;++i)								// check king
 		for(short j=y-1;j<y+2;++j)
 			if((board[j][i] == W_KING - 7*turn) && WithinBounds(i) && WithinBounds(j))			return true;
-	if((board[y-1][x-2] == W_KNIGHT - 7*turn) && (y > 0) && (x > 1))							return true;	//check knight
+	if((board[y-1][x-2] == W_KNIGHT - 7*turn) && (y > 0) && (x > 1))							return true;	// check knight
 	else if((board[y-1][x+2] == W_KNIGHT - 7*turn) && (y > 0) && (x < BOARD_SIZE-2))			return true;
 	else if((board[y+1][x-2] == W_KNIGHT - 7*turn) && (y < BOARD_SIZE-1) && (x > 1))			return true;
 	else if((board[y+1][x+2] == W_KNIGHT - 7*turn) && (y < BOARD_SIZE-1) && (x < BOARD_SIZE-2))	return true;
@@ -279,7 +315,7 @@ bool Chess::IsCheck(const bool &turn) const noexcept {
 	else if((board[y-2][x+1] == W_KNIGHT - 7*turn) && (y > 1) && (x < BOARD_SIZE-1))			return true;
 	else if((board[y+2][x-1] == W_KNIGHT - 7*turn) && (y < BOARD_SIZE-2) && (x > 0))			return true;
 	else if((board[y+2][x+1] == W_KNIGHT - 7*turn) && (y < BOARD_SIZE-2) && (x < BOARD_SIZE-1))	return true;
-	else if((board[y + (turn ? -1 : 1)][x+1] == W_PAWN - 7*turn) && (x < BOARD_SIZE-1))			return true;	//check pawn
+	else if((board[y + (turn ? -1 : 1)][x+1] == W_PAWN - 7*turn) && (x < BOARD_SIZE-1))			return true;	// check pawn
 	else if((board[y + (turn ? -1 : 1)][x-1] == W_PAWN - 7*turn) && (x > 0))					return true;
 	return false;
 }
@@ -298,14 +334,14 @@ std::forward_list<std::string> Chess::PawnMoves(const short &x, const short &y) 
 	const short &inc = whites_turn ? -1 : 1;
 	std::forward_list<std::string> all_moves;
 	if(board[y+inc][x] == EMPTY) {
-		all_moves.emplace_front(ToString(x, y, x, y+inc));				//1 square forward
+		all_moves.emplace_front(ToString(x, y, x, y+inc));				// 1 square forward
 		if((y == 1 + 5*whites_turn) && (board[y + 2*inc][x] == EMPTY))
-			all_moves.emplace_front(ToString(x, y, x, y + 2*inc));		//2 squares forward
+			all_moves.emplace_front(ToString(x, y, x, y + 2*inc));		// 2 squares forward
 	}
 	if(GetEnPassant(x, y) != -1)
 		all_moves.emplace_front(ToString(x, y, GetEnPassant(x, y), y+inc));
 	if(IsValid(board[y+inc][x+1]) && (x < BOARD_SIZE-1))
-		all_moves.emplace_front(ToString(x, y, x+1, y+inc));		//diagonal attack moves
+		all_moves.emplace_front(ToString(x, y, x+1, y+inc));		// diagonal attack moves
 	if(IsValid(board[y+inc][x-1]) && (x > 0))
 		all_moves.emplace_front(ToString(x, y, x-1, y+inc));
 	return all_moves;
@@ -314,7 +350,7 @@ std::forward_list<std::string> Chess::PawnMoves(const short &x, const short &y) 
 std::forward_list<std::string> Chess::RookMoves(const short &x, const short &y) const noexcept {
 	const auto &IsValid = whites_turn ? [](const char &ch){ return ch < 0; } : [](const char &ch){ return ch > 0; };
 	std::forward_list<std::string> all_moves;
-	for(short i=x+1;i<BOARD_SIZE;++i)			//right
+	for(short i=x+1;i<BOARD_SIZE;++i)			// right
 		if(board[y][i] == EMPTY)
 			all_moves.emplace_front(ToString(x, y, i, y));
 		else {
@@ -322,7 +358,7 @@ std::forward_list<std::string> Chess::RookMoves(const short &x, const short &y) 
 				all_moves.emplace_front(ToString(x, y, i, y));
 			break;
 		}
-	for(short i=x-1;i>=0;--i)					//left
+	for(short i=x-1;i>=0;--i)					// left
 		if(board[y][i] == EMPTY)
 			all_moves.emplace_front(ToString(x, y, i, y));
 		else {
@@ -330,7 +366,7 @@ std::forward_list<std::string> Chess::RookMoves(const short &x, const short &y) 
 				all_moves.emplace_front(ToString(x, y, i, y));
 			break;
 		}
-	for(short i=y+1;i<BOARD_SIZE;++i)			//down
+	for(short i=y+1;i<BOARD_SIZE;++i)			// down
 		if(board[i][x] == EMPTY)
 			all_moves.emplace_front(ToString(x, y, x, i));
 		else {
@@ -338,7 +374,7 @@ std::forward_list<std::string> Chess::RookMoves(const short &x, const short &y) 
 				all_moves.emplace_front(ToString(x, y, x, i));
 			break;
 		}
-	for(short i=y-1;i>=0;--i)					//up
+	for(short i=y-1;i>=0;--i)					// up
 		if(board[i][x] == EMPTY)
 			all_moves.emplace_front(ToString(x, y, x, i));
 		else {
@@ -374,7 +410,7 @@ std::forward_list<std::string> Chess::KnightMoves(const short &x, const short &y
 std::forward_list<std::string> Chess::BishopMoves(const short &x, const short &y) const noexcept {
 	const auto &IsValid = whites_turn ? [](const char &ch){ return ch < 0; } : [](const char &ch){ return ch > 0; };
 	std::forward_list<std::string> all_moves;
-	for(short i=x-1, j=y-1; i>=0 && j>=0; --i, --j)						//upper left diagonal
+	for(short i=x-1, j=y-1; i>=0 && j>=0; --i, --j)						// upper left diagonal
 		if(board[j][i] == EMPTY)
 			all_moves.emplace_front(ToString(x, y, i, j));
 		else {
@@ -382,7 +418,7 @@ std::forward_list<std::string> Chess::BishopMoves(const short &x, const short &y
 				all_moves.emplace_front(ToString(x, y, i, j));
 			break;
 		}
-	for(short i=x-1, j=y+1; i>=0 && j<BOARD_SIZE; --i, ++j)				//lower left diagonal
+	for(short i=x-1, j=y+1; i>=0 && j<BOARD_SIZE; --i, ++j)				// lower left diagonal
 		if(board[j][i] == EMPTY)
 			all_moves.emplace_front(ToString(x, y, i, j));
 		else {
@@ -390,7 +426,7 @@ std::forward_list<std::string> Chess::BishopMoves(const short &x, const short &y
 				all_moves.emplace_front(ToString(x, y, i, j));
 			break;
 		}
-	for(short i=x+1, j=y-1; i<BOARD_SIZE && j>=0; ++i, --j)				//upper right diagonal
+	for(short i=x+1, j=y-1; i<BOARD_SIZE && j>=0; ++i, --j)				// upper right diagonal
 		if(board[j][i] == EMPTY)
 			all_moves.emplace_front(ToString(x, y, i, j));
 		else {
@@ -398,7 +434,7 @@ std::forward_list<std::string> Chess::BishopMoves(const short &x, const short &y
 				all_moves.emplace_front(ToString(x, y, i, j));
 			break;
 		}
-	for(short i=x+1, j=y+1; i<BOARD_SIZE && j<BOARD_SIZE; ++i, ++j)		//lower right diagonal
+	for(short i=x+1, j=y+1; i<BOARD_SIZE && j<BOARD_SIZE; ++i, ++j)		// lower right diagonal
 		if(board[j][i] == EMPTY)
 			all_moves.emplace_front(ToString(x, y, i, j));
 		else {
@@ -410,7 +446,7 @@ std::forward_list<std::string> Chess::BishopMoves(const short &x, const short &y
 }
 
 std::forward_list<std::string> Chess::QueenMoves(const short &x, const short &y) const noexcept {
-	auto all_moves = RookMoves(x, y);			//queen = rook + bishop
+	auto all_moves = RookMoves(x, y);			// queen = rook + bishop
 	all_moves.merge(BishopMoves(x, y));
 	return all_moves;
 }
@@ -418,17 +454,17 @@ std::forward_list<std::string> Chess::QueenMoves(const short &x, const short &y)
 std::forward_list<std::string> Chess::KingMoves(const short &x, const short &y) const noexcept {
 	const auto &IsValid = whites_turn ? [](const char &ch){ return ch <= 0; } : [](const char &ch){ return ch >= 0; };
 	std::forward_list<std::string> all_moves;
-	for(short i=x-1;i<x+2;++i)		//add moves within 1 square reach
+	for(short i=x-1;i<x+2;++i)		// add moves within 1 square reach
 		for(short j=y-1;j<y+2;++j)
 			if(IsValid(board[j][i]) && WithinBounds(i) && WithinBounds(j))
 				all_moves.emplace_front(ToString(x, y, i, j));
-	if(GetCurrentPlayerConst().GetCastling())		//add castling moves if castling is possible
+	if(GetCurrentPlayerConst().GetCastling())		// add castling moves if castling is possible
 		if(!IsCheck(whites_turn)) {
 			const short &line = (BOARD_SIZE-1)*whites_turn;
 			if((board[line][0] == B_ROOK + 7*whites_turn) && board[line][1] == EMPTY && board[line][2] == EMPTY && board[line][3] == EMPTY)
-				all_moves.emplace_front(ToString(4, line, 2, line));	//long castling
+				all_moves.emplace_front(ToString(4, line, 2, line));	// long castling
 			else if((board[line][7] == B_ROOK + 7*whites_turn) && board[line][5] == EMPTY && board[line][6] == EMPTY)
-				all_moves.emplace_front(ToString(4, line, 6, line));	//short castling
+				all_moves.emplace_front(ToString(4, line, 6, line));	// short castling
 		}
 	return all_moves;
 }
@@ -465,7 +501,7 @@ std::forward_list<std::string> Chess::AllMoves() noexcept {
 					all_moves.merge(KingMoves(x, y));
 			}
 		}
-	for(auto it = all_moves.begin(), prev = all_moves.before_begin(); it != all_moves.cend();)		//if the possible move makes me checkmate after the opponent's turn, remove it from the list
+	for(auto it = all_moves.begin(), prev = all_moves.before_begin(); it != all_moves.cend();)		// if the possible move makes me checkmate after the opponent's turn, remove it from the list
 		if(IsCheck(*it))
 			it = all_moves.erase_after(prev);
 		else
@@ -498,11 +534,11 @@ void Chess::ManuallyPromotePawn(const short &x, const short &y) noexcept {
 void Chess::MovePiece(const short &x1, const short &y1, const short &x2, const short &y2, const bool &manual_promotion, const bool &update_board) noexcept {
 //	CheckCoordinates(x1, y1, "MovePiece");
 //	CheckCoordinates(x2, y2, "MovePiece");
-	AppendToAllGameMoves(x1, y1, x2, y2);		//similar to FEN notation but not really, the starting and ending points of the moving piece, promoted piece if there is promotion and ability to do castling
+	AppendToAllGameMoves(x1, y1, x2, y2);		// similar to FEN notation but not really, the starting and ending points of the moving piece, promoted piece if there is promotion and ability to do castling
 	switch(board[y1][x1]) {
 		case W_PAWN:
 		case B_PAWN:
-			if(y2 == ((BOARD_SIZE-1) * !whites_turn)) {			//check for castling, promotion or en passant
+			if(y2 == ((BOARD_SIZE-1) * !whites_turn)) {			// check for castling, promotion or en passant
 				if(manual_promotion) {
 					ManuallyPromotePawn(x1, y1);
 					MoveCursorToXY(RIGHT, DOWN + 3*BOARD_SIZE + 7);
@@ -556,12 +592,12 @@ void Chess::MovePiece(const short &x1, const short &y1, const short &x2, const s
 			if(all_game_moves.back().second[5] != EMPTY) {
 				GetCurrentPlayer().IncreaseScore(EvaluatePiece(all_game_moves.back().second[5]));
 				UpdateScore(GetCurrentPlayerConst());
-				moves_after_last_pawn_move_or_capture = 0;		//the piece is eaten
+				moves_after_last_pawn_move_or_capture = 0;		// the piece is eaten
 			}
 		UpdateBoard(x1, y1);
 		UpdateBoard(x2, y2);
 	}
-	ChangeTurn();		//it's the opponent's turn
+	ChangeTurn();		// it's the opponent's turn
 }
 
 // undoes the move from (x1,y1) to (x2,y2), the opposite of the "MovePiece" function
@@ -624,7 +660,7 @@ float Chess::EvaluateMove(const short &x, const short &y) const noexcept {
 	if(board[y][x] == EMPTY)
 		return 0;
 	static float PIECE_POS_POINTS[6][BOARD_SIZE][BOARD_SIZE] =
-	{{{-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0},		//king
+	{{{-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0},		// king
 	{-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0},
 	{-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0},
 	{-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0},
@@ -633,7 +669,7 @@ float Chess::EvaluateMove(const short &x, const short &y) const noexcept {
 	{2.0, 2.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0},
 	{2.0, 3.0, 1.0, 0.0, 0.0, 1.0, 3.0, 2.0}}
 	,
-	{{-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0},		//queen
+	{{-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0},		// queen
 	{-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0},
 	{-1.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.0, -1.0},
 	{-0.5, 0.0, 0.5, 0.5, 0.5, 0.5, 0.0, -0.5},
@@ -642,7 +678,7 @@ float Chess::EvaluateMove(const short &x, const short &y) const noexcept {
 	{-1.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, -1.0},
 	{-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0}}
 	,
-	{{-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0},		//bishop
+	{{-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0},		// bishop
 	{-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0},
 	{-1.0, 0.0, 0.5, 1.0, 1.0, 0.5, 0.0, -1.0},
 	{-1.0, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5, -1.0},
@@ -651,7 +687,7 @@ float Chess::EvaluateMove(const short &x, const short &y) const noexcept {
 	{-1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, -1.0},
 	{-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0}}
 	,
-	{{-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0},		//knight
+	{{-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0},		// knight
 	{-4.0, -2.0, 0.0, 0.0, 0.0, 0.0, -2.0, -4.0},
 	{-3.0, 0.0, 1.0, 1.5, 1.5, 1.0, 0.0, -3.0},
 	{-3.0, 0.5, 1.5, 2.0, 2.0, 1.5, 0.5, -3.0},
@@ -660,7 +696,7 @@ float Chess::EvaluateMove(const short &x, const short &y) const noexcept {
 	{-4.0, -2.0, 0.0, 0.5, 0.5, 0.0, -2.0, -4.0},
 	{-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0}}
 	,
-	{{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},				//rook
+	{{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},				// rook
 	{0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5},
 	{-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5},
 	{-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5},
@@ -669,14 +705,14 @@ float Chess::EvaluateMove(const short &x, const short &y) const noexcept {
 	{-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5},
 	{0.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0}}
 	,
-	{{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},				//pawn
+	{{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},				// pawn
 	{5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0},
 	{1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0},
 	{0.5, 0.5, 1.0, 2.5, 2.5, 1.0, 0.5, 0.5},
 	{0.0, 0.0, 0.0, 2.0, 2.0, 0.0, 0.0, 0.0},
 	{0.5, -0.5, -1.0, 0.0, 0.0, -1.0, -0.5, 0.5},
 	{0.5, 1.0, 1.0, -2.0, -2.0, 1.0, 1.0, 0.5},
-	{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}}};				//returns negative points if the pieces are black, positive points if the pieces are white
+	{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}}};				// returns negative points if the pieces are black, positive points if the pieces are white
 	return (board[y][x]<0 ? -1 : 1) * (EvaluatePiece(board[y][x]) + PIECE_POS_POINTS[board[y][x] + 7*(board[y][x]<0) - 1][board[y][x]<0 ? BOARD_SIZE-y-1 : y][x]);
 }
 
@@ -743,16 +779,16 @@ void Chess::PrintAllMovesMadeInOrder() const noexcept {
 }
 
 bool Chess::CheckEndgame(const unsigned short &n) noexcept {
-	if(AllMoves().empty()) {			//if the opponent has no moves left, then it is checkmate
+	if(AllMoves().empty()) {			// if the opponent has no moves left, then it is checkmate
 		GetOtherPlayer().IncreaseScore(EvaluatePiece(W_KING));
 		UpdateScore(GetOtherPlayerConst());
 		return EndGameText(n, CHECKMATE);
 	}
 	else if(all_game_moves.back().first != CASTLING) {
 		if(all_game_moves.back().second[4] == W_PAWN - 7*whites_turn)
-			moves_after_last_pawn_move_or_capture = 0;		//pawn has moved
+			moves_after_last_pawn_move_or_capture = 0;		// pawn has moved
 		else if(all_game_moves.back().second[5] != EMPTY)
-			moves_after_last_pawn_move_or_capture = 0;		//capture has occured
+			moves_after_last_pawn_move_or_capture = 0;		// capture has occured
 		else if((++moves_after_last_pawn_move_or_capture) == 50)
 			return EndGameText(n, FIFTY_MOVES);
 	}
