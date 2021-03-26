@@ -73,7 +73,7 @@ std::string Chess::PieceNameToString(const char &piece) noexcept {
 	}
 }
 
-// returns the worth of the given piece in points
+// returns the worth of the given piece in terms of points
 float Chess::EvaluatePiece(const char &piece) noexcept {
 	switch(piece) {
 		case W_PAWN:
@@ -141,10 +141,12 @@ Bot Chess::GetCurrentPlayerConst() const noexcept {
 	return whites_turn ? white : black;
 }
 
+// returns a reference to the player object
 Bot& Chess::GetOtherPlayer() noexcept {
 	return whites_turn ? black : white;
 }
 
+// returns a copy of the player object
 Bot Chess::GetOtherPlayerConst() const noexcept {
 	return whites_turn ? black : white;
 }
@@ -187,6 +189,7 @@ void Chess::CheckCoordinates(const short &x, const short &y, const std::string &
 	}
 }
 
+// prints game over message to the terminal
 bool Chess::EndGameText(const unsigned short &n, const Endgame &end_game) const noexcept {
 	ClearAllMoves(n);
 	MoveCursorToXY(RIGHT, DOWN + 3*BOARD_SIZE + 7);
@@ -217,21 +220,23 @@ short Chess::GetEnPassant(const short &x, const short &y) const noexcept {
 		return -1;
 	auto last_move = all_game_moves.back().second;
 	ChangeToRealCoordinates(last_move[0], last_move[1], last_move[2], last_move[3]);
-	return ((last_move[4] == W_PAWN - 7*whites_turn) && (abs(last_move[0]-x) == 1) && (last_move[3]-last_move[1] == 2*(whites_turn ? 1 : -1)) && (y == 4-whites_turn)) ? last_move[0] : -1;
+	return ((last_move[4] == W_PAWN - 7*whites_turn) && (abs(last_move[0] - x) == 1) && (last_move[3]-last_move[1] == 2*(whites_turn ? 1 : -1)) && (y == 4 - whites_turn)) ? last_move[0] : -1;
 }
 
+// returns the x coordinate of the en passant move
 template<class Iterator> short Chess::GetEnPassant(const char board[BOARD_SIZE][BOARD_SIZE], const Iterator &it) const noexcept {
 	if(it->first != NORMAL)
 		return -1;
 	auto last_move = it->second;
 	ChangeToRealCoordinates(last_move[0], last_move[1], last_move[2], last_move[3]);
 	for(short x=0;x<BOARD_SIZE;++x)
-		if(board[3+whites_turn][x] == W_PAWN - 7*whites_turn)
-			if((last_move[4] == B_PAWN + 7*whites_turn) && (abs(last_move[0]-x) == 1) && (last_move[3]-last_move[1] == 2*(whites_turn ? -1 : 1)))
+		if(board[3 + whites_turn][x] == W_PAWN - 7*whites_turn)
+			if((last_move[4] == B_PAWN + 7*whites_turn) && (abs(last_move[0] - x) == 1) && (last_move[3] - last_move[1] == 2*(whites_turn ? -1 : 1)))
 				return last_move[0];
 	return -1;
 }
 
+// returns true if threefold repetition occurs, false otherwise
 bool Chess::ThreefoldRepetition() const noexcept {
 	static char prev_board[BOARD_SIZE][BOARD_SIZE];
 	CopyBoard(board, prev_board);
@@ -264,6 +269,7 @@ bool Chess::ThreefoldRepetition() const noexcept {
 	}
 }
 
+// returns true if the player's king is in check, false otherwise
 bool Chess::IsCheck(const bool &turn) const noexcept {
 	short x = -1, y = -1;
 	for(short i=0;x==-1;++i)
@@ -320,6 +326,7 @@ bool Chess::IsCheck(const bool &turn) const noexcept {
 	return false;
 }
 
+// function overload, returns true if the player's king is in check, false otherwise
 bool Chess::IsCheck(std::string &move) noexcept {
 	ChangeToRealCoordinates(move[0], move[1], move[2], move[3]);
 	MovePiece(move[0], move[1], move[2], move[3], false, false);
@@ -329,6 +336,7 @@ bool Chess::IsCheck(std::string &move) noexcept {
 	return is_check;
 }
 
+// returns a list of all possible moves the pawn located in (x, y) can make
 std::forward_list<std::string> Chess::PawnMoves(const short &x, const short &y) const noexcept {
 	const auto &IsValid = whites_turn ? [](const char &ch){ return ch < 0; } : [](const char &ch){ return ch > 0; };
 	const short &inc = whites_turn ? -1 : 1;
@@ -347,6 +355,7 @@ std::forward_list<std::string> Chess::PawnMoves(const short &x, const short &y) 
 	return all_moves;
 }
 
+// returns a list of all possible moves the rook located in (x, y) can make
 std::forward_list<std::string> Chess::RookMoves(const short &x, const short &y) const noexcept {
 	const auto &IsValid = whites_turn ? [](const char &ch){ return ch < 0; } : [](const char &ch){ return ch > 0; };
 	std::forward_list<std::string> all_moves;
@@ -385,6 +394,7 @@ std::forward_list<std::string> Chess::RookMoves(const short &x, const short &y) 
 	return all_moves;
 }
 
+// returns a list of all possible moves the knight located in (x, y) can make
 std::forward_list<std::string> Chess::KnightMoves(const short &x, const short &y) const noexcept {
 	const auto &IsValid = whites_turn ? [](const char &ch){ return ch <= 0; } : [](const char &ch){ return ch >= 0; };
 	std::forward_list<std::string> all_moves;
@@ -407,6 +417,7 @@ std::forward_list<std::string> Chess::KnightMoves(const short &x, const short &y
 	return all_moves;
 }
 
+// returns a list of all possible moves the bishop located in (x, y) can make
 std::forward_list<std::string> Chess::BishopMoves(const short &x, const short &y) const noexcept {
 	const auto &IsValid = whites_turn ? [](const char &ch){ return ch < 0; } : [](const char &ch){ return ch > 0; };
 	std::forward_list<std::string> all_moves;
@@ -445,12 +456,14 @@ std::forward_list<std::string> Chess::BishopMoves(const short &x, const short &y
 	return all_moves;
 }
 
+// returns a list of all possible moves the queen located in (x, y) can make
 std::forward_list<std::string> Chess::QueenMoves(const short &x, const short &y) const noexcept {
 	auto all_moves = RookMoves(x, y);			// queen = rook + bishop
 	all_moves.merge(BishopMoves(x, y));
 	return all_moves;
 }
 
+// returns a list of all possible moves the king located in (x, y) can make
 std::forward_list<std::string> Chess::KingMoves(const short &x, const short &y) const noexcept {
 	const auto &IsValid = whites_turn ? [](const char &ch){ return ch <= 0; } : [](const char &ch){ return ch >= 0; };
 	std::forward_list<std::string> all_moves;
@@ -469,6 +482,7 @@ std::forward_list<std::string> Chess::KingMoves(const short &x, const short &y) 
 	return all_moves;
 }
 
+// returns a list of all possible moves the player can make
 std::forward_list<std::string> Chess::AllMoves() noexcept {
 	std::forward_list<std::string> all_moves;
 	for(short y=0;y<BOARD_SIZE;++y)
@@ -509,6 +523,7 @@ std::forward_list<std::string> Chess::AllMoves() noexcept {
 	return all_moves;
 }
 
+// returns a random move the player can make
 std::string Chess::GetRandomMove() noexcept {
 	auto all_moves = AllMoves();
 	auto move = all_moves.begin();
@@ -517,6 +532,7 @@ std::string Chess::GetRandomMove() noexcept {
 	return *move;
 }
 
+// asks the player it's choice of promotion, then promotes the pawn to the desired piece
 void Chess::ManuallyPromotePawn(const short &x, const short &y) noexcept {
 	MoveCursorToXY(RIGHT, DOWN + 3*BOARD_SIZE + 7);
 	std::cout << "Enter your choice of promotion [(r)ook, (k)night, (b)ishop, (q)ueen]";
@@ -531,6 +547,7 @@ void Chess::ManuallyPromotePawn(const short &x, const short &y) noexcept {
 		}
 }
 
+// moves the piece from (x1, y1) to (x2, y2)
 void Chess::MovePiece(const short &x1, const short &y1, const short &x2, const short &y2, const bool &manual_promotion, const bool &update_board) noexcept {
 //	CheckCoordinates(x1, y1, "MovePiece");
 //	CheckCoordinates(x2, y2, "MovePiece");
@@ -641,6 +658,7 @@ void Chess::MovePieceBack(const short &x1, const short &y1, const short &x2, con
 	all_game_moves.pop_back();
 }
 
+// updates the board display on the terminal
 void Chess::UpdateBoard(const short &x, const short &y) const noexcept {
 	const unsigned short &diff = BOX_WIDTH - PieceNameToString(board[y][x]).length();
 	MoveCursorToXY(RIGHT + (BOX_WIDTH+1)*x, DOWN + 3*y + 1);
@@ -648,6 +666,7 @@ void Chess::UpdateBoard(const short &x, const short &y) const noexcept {
 	if(diff%2)	std::cout << " ";
 }
 
+// updates the score display on the terminal
 void Chess::UpdateScore(const Bot &p) const noexcept {
 	const unsigned short &dx = p==white ? white.GetName().length() + 2 : (BOX_WIDTH+1)*BOARD_SIZE - 5;
 	MoveCursorToXY(RIGHT+dx, DOWN + 3*BOARD_SIZE + 2);
@@ -656,7 +675,8 @@ void Chess::UpdateScore(const Bot &p) const noexcept {
 	std::cout << p.GetScore();
 }
 
-float Chess::EvaluateMove(const short &x, const short &y) const noexcept {
+// returns the worth of the position of the piece in terms of points
+float Chess::EvaluatePosition(const short &x, const short &y) const noexcept {
 	if(board[y][x] == EMPTY)
 		return 0;
 	static float PIECE_POS_POINTS[6][BOARD_SIZE][BOARD_SIZE] =
@@ -716,14 +736,16 @@ float Chess::EvaluateMove(const short &x, const short &y) const noexcept {
 	return (board[y][x]<0 ? -1 : 1) * (EvaluatePiece(board[y][x]) + PIECE_POS_POINTS[board[y][x] + 7*(board[y][x]<0) - 1][board[y][x]<0 ? BOARD_SIZE-y-1 : y][x]);
 }
 
+// returns the worth of the board position in terms of points
 float Chess::EvaluateBoard(const bool &turn) const noexcept {
 	float total_evaluation = 0.0;
 	for(short y=0;y<BOARD_SIZE;++y)
 		for(short x=0;x<BOARD_SIZE;++x)
-			total_evaluation += EvaluateMove(x, y);
+			total_evaluation += EvaluatePosition(x, y);
 	return (turn ? 1 : -1) * total_evaluation;
 }
 
+// prints the game board on the terminal
 void Chess::PrintBoard() const noexcept {
 	std::cout << TO_DOWN << TO_RIGHT;
 	for(short y=0;y<BOARD_SIZE;++y) {
@@ -751,6 +773,7 @@ void Chess::PrintBoard() const noexcept {
 	std::cout << std::endl << std::endl << TO_RIGHT << "All possible moves:" << std::endl;
 }
 
+// after the game is over, prints all moves played throughout the game in chronological order
 void Chess::PrintAllMovesMadeInOrder() const noexcept {
 	std::cout << std::endl << std::endl << TO_RIGHT << "All moves made in order:" << std::endl;
 	bool turn = true;
@@ -778,6 +801,7 @@ void Chess::PrintAllMovesMadeInOrder() const noexcept {
 	}
 }
 
+// checks if the game is over or not
 bool Chess::CheckEndgame(const unsigned short &n) noexcept {
 	if(AllMoves().empty()) {			// if the opponent has no moves left, then it is checkmate
 		GetOtherPlayer().IncreaseScore(EvaluatePiece(W_KING));
@@ -799,6 +823,7 @@ bool Chess::CheckEndgame(const unsigned short &n) noexcept {
 	return false;
 }
 
+// lists all possible moves, expects player input and plays the given move if it is valid, expects a valid input otherwise
 bool Chess::PlayersTurn() noexcept {
 	auto all_moves = AllMoves();
 	all_moves.sort();
@@ -846,6 +871,7 @@ bool Chess::PlayersTurn() noexcept {
 	return true;
 }
 
+// plays the bots move
 bool Chess::BotsTurn() noexcept {
 	const auto &move = (whites_turn ? WHITE_BOT_RANDOM : BLACK_BOT_RANDOM) ? GetRandomMove() : GetCurrentPlayer().GetIdealMove(*this);
 	MovePiece(move[0], move[1], move[2], move[3], false, true);
@@ -856,6 +882,7 @@ bool Chess::BotsTurn() noexcept {
 	return true;
 }
 
+// prints game over messages and expects user input for another game
 bool Chess::GameOver() noexcept {
 	std::cout << std::endl << std::endl << std::endl << TO_RIGHT << "Press R to play again.";
 	std::cout << std::endl << TO_RIGHT << "Press any other key to quit.";
