@@ -12,7 +12,7 @@ A C++ project in which you can play chess against an AI program which operates i
 
 
 
-## Run on terminal
+# Run on terminal
 
 ```sh
 g++ Header/*.cpp main.cpp -std=c++11 -o test
@@ -21,10 +21,9 @@ test
 
 
 
-## Author
+# Author
 
 👤 **Aras Güngöre**
 
 * LinkedIn: [@arasgungore](https://www.linkedin.com/in/arasgungore)
 * Github: [@arasgungore](https://github.com/arasgungore)
-* HackerRank: [@arasgungore](https://www.hackerrank.com/arasgungore)
