@@ -4,7 +4,7 @@ A C++ project in which you can play chess against an AI with a specified decisio
 
 
 
-# Gameplay
+## Gameplay
 
 <p align="center">
     <img alt="Screenshot" src="https://github.com/arasgungore/chess-bot/blob/main/Gameplay/bot_vs_bot.gif" width="1000">
@@ -12,7 +12,7 @@ A C++ project in which you can play chess against an AI with a specified decisio
 
 
 
-# Run on terminal
+## Run on terminal
 
 ```sh
 g++ Header/*.cpp main.cpp -std=c++11 -o test
@@ -21,7 +21,7 @@ test
 
 
 
-# Author
+## Author
 
 👤 **Aras Güngöre**
 
