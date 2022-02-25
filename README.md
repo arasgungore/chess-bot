@@ -12,7 +12,7 @@ A C++ project in which you can play chess against an AI with a specified decisio
 
 
 
-## Run on terminal
+## Run on Terminal
 
 ```sh
 g++ Header/*.cpp main.cpp -std=c++11 -o test
