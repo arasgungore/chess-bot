@@ -16,7 +16,7 @@ test
 ## Gameplay
 
 <p align="center">
-    <img alt="Screenshot" src="https://github.com/arasgungore/chess-bot/blob/main/Gameplay/bot_vs_bot.gif" width="1000">
+    <img alt="Screenshot" src="https://usatodayhss.com/wp-content/uploads/sites/96/2019/05/img.v1.jpg?w=1024&h=576&crop=1" width="1000">
 </p>
 
 
